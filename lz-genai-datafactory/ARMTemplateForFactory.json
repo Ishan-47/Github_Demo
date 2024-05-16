@@ -1,0 +1,693 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "lz-genai-datafactory"
+		},
+		"Ls_Github_demo_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'Ls_Github_demo'"
+		},
+		"Ls_Github_demo_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://lzgenaigen2.dfs.core.windows.net/"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/Github_Demo')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data Github Demo",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "Ds_Github_Demo",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "Ds_Github_Demo_Sink",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Copy data for the Sub-branch",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Copy data Github Demo",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"wildcardFileName": "*csv",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "Ds_Github_Demo_Sink",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "Ds_Github_Demo_Sink_sub_Branch",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Ds_Github_Demo')]",
+				"[concat(variables('factoryId'), '/datasets/Ds_Github_Demo_Sink')]",
+				"[concat(variables('factoryId'), '/datasets/Ds_Github_Demo_Sink_sub_Branch')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Ds_Github_Demo')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Ls_Github_demo",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "Dataverse240508.csv",
+						"fileSystem": "maan-container-dataverse-to-blob-rawdata"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "admission_date",
+						"type": "String"
+					},
+					{
+						"name": "admitting_nurse",
+						"type": "String"
+					},
+					{
+						"name": "age",
+						"type": "String"
+					},
+					{
+						"name": "allergies",
+						"type": "String"
+					},
+					{
+						"name": "blood_pressure",
+						"type": "String"
+					},
+					{
+						"name": "blood_type",
+						"type": "String"
+					},
+					{
+						"name": "chief_complaint",
+						"type": "String"
+					},
+					{
+						"name": "date_of_birth",
+						"type": "String"
+					},
+					{
+						"name": "diagnosis",
+						"type": "String"
+					},
+					{
+						"name": "discharge_date",
+						"type": "String"
+					},
+					{
+						"name": "discharge_instructions",
+						"type": "String"
+					},
+					{
+						"name": "emergency_contact_name",
+						"type": "String"
+					},
+					{
+						"name": "emergency_contact_phone",
+						"type": "String"
+					},
+					{
+						"name": "first_name",
+						"type": "String"
+					},
+					{
+						"name": "gender",
+						"type": "String"
+					},
+					{
+						"name": "height",
+						"type": "String"
+					},
+					{
+						"name": "insurance_policy_number",
+						"type": "String"
+					},
+					{
+						"name": "insurance_provider",
+						"type": "String"
+					},
+					{
+						"name": "lab_results",
+						"type": "String"
+					},
+					{
+						"name": "last_name",
+						"type": "String"
+					},
+					{
+						"name": "medications",
+						"type": "String"
+					},
+					{
+						"name": "patient_id",
+						"type": "String"
+					},
+					{
+						"name": "primary_physician",
+						"type": "String"
+					},
+					{
+						"name": "pulse_rate",
+						"type": "String"
+					},
+					{
+						"name": "respiratory_rate",
+						"type": "String"
+					},
+					{
+						"name": "room_number",
+						"type": "String"
+					},
+					{
+						"name": "table1id",
+						"type": "String"
+					},
+					{
+						"name": "temperature",
+						"type": "String"
+					},
+					{
+						"name": "treatment_plan",
+						"type": "String"
+					},
+					{
+						"name": "vital_signs",
+						"type": "String"
+					},
+					{
+						"name": "weight",
+						"type": "String"
+					},
+					{
+						"name": "createdby",
+						"type": "String"
+					},
+					{
+						"name": "createdbyname",
+						"type": "String"
+					},
+					{
+						"name": "createdbyyominame",
+						"type": "String"
+					},
+					{
+						"name": "createdon",
+						"type": "String"
+					},
+					{
+						"name": "createdonbehalfby",
+						"type": "String"
+					},
+					{
+						"name": "createdonbehalfbyname",
+						"type": "String"
+					},
+					{
+						"name": "createdonbehalfbyyominame",
+						"type": "String"
+					},
+					{
+						"name": "importsequencenumber",
+						"type": "String"
+					},
+					{
+						"name": "modifiedby",
+						"type": "String"
+					},
+					{
+						"name": "modifiedbyname",
+						"type": "String"
+					},
+					{
+						"name": "modifiedbyyominame",
+						"type": "String"
+					},
+					{
+						"name": "modifiedon",
+						"type": "String"
+					},
+					{
+						"name": "modifiedonbehalfby",
+						"type": "String"
+					},
+					{
+						"name": "modifiedonbehalfbyname",
+						"type": "String"
+					},
+					{
+						"name": "modifiedonbehalfbyyominame",
+						"type": "String"
+					},
+					{
+						"name": "overriddencreatedon",
+						"type": "String"
+					},
+					{
+						"name": "ownerid",
+						"type": "String"
+					},
+					{
+						"name": "owneridname",
+						"type": "String"
+					},
+					{
+						"name": "owneridtype",
+						"type": "String"
+					},
+					{
+						"name": "owneridyominame",
+						"type": "String"
+					},
+					{
+						"name": "owningbusinessunit",
+						"type": "String"
+					},
+					{
+						"name": "owningbusinessunitname",
+						"type": "String"
+					},
+					{
+						"name": "owningteam",
+						"type": "String"
+					},
+					{
+						"name": "owninguser",
+						"type": "String"
+					},
+					{
+						"name": "statecode",
+						"type": "String"
+					},
+					{
+						"name": "statuscode",
+						"type": "String"
+					},
+					{
+						"name": "timezoneruleversionnumber",
+						"type": "String"
+					},
+					{
+						"name": "utcconversiontimezonecode",
+						"type": "String"
+					},
+					{
+						"name": "versionnumber",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Ls_Github_demo')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Ds_Github_Demo_Sink')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Ls_Github_demo",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "ishan",
+						"fileSystem": "dataversetosink"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Ls_Github_demo')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Ds_Github_Demo_Sink_sub_Branch')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Ls_Github_demo",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "ishan",
+						"fileSystem": "dataversetosink"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": false,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Ls_Github_demo')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Ls_Github_demo')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('Ls_Github_demo_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('Ls_Github_demo_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}
