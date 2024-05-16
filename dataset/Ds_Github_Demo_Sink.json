@@ -1,0 +1,23 @@
+{
+	"name": "Ds_Github_Demo_Sink",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Ls_Github_demo",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "ishan",
+				"fileSystem": "dataversetosink"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
